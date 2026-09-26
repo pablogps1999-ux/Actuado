@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actuando — ¿Personaje o Película?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎭</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage: #171015;
+    --stage-2: #1f1620;
+    --curtain: #7A1B34;
+    --curtain-dark: #5A1226;
+    --gold: #E8B84B;
+    --gold-soft: #F2CE7A;
+    --cream: #F4ECDD;
+    --cream-dim: #C9BFAE;
+    --coral: #D85A30;
+    --teal: #1D9E75;
+    --radius-lg: 22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(232,184,75,0.10), transparent 60%),
+      var(--stage);
+    min-height:100vh;
+    font-family:'Poppins', sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:620px;
+  }
+
+  /* Marquee title */
+  .marquee{
+    position:relative;
+    text-align:center;
+    padding:22px 18px 26px;
+    margin-bottom:34px;
+    border:2px solid var(--gold);
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(232,184,75,0.06), transparent);
+  }
+  .bulb{
+    position:absolute;
+    width:9px;height:9px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px 2px rgba(232,184,75,0.7);
+    animation:blink 1.6s infinite ease-in-out;
+  }
+  @keyframes blink{
+    0%,100%{opacity:1;}
+    50%{opacity:0.25;}
+  }
+  h1{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:clamp(38px, 8vw, 58px);
+    letter-spacing:3px;
+    margin:0;
+    color:var(--gold-soft);
+    line-height:1;
+  }
+  .subtitle{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:15px;
+    color:var(--cream-dim);
+    margin-top:8px;
+  }
+
+  /* Category buttons */
+  .choices{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:8px;
+  }
+  @media (max-width:480px){
+    .choices{grid-template-columns:1fr;}
+  }
+  .choice-btn{
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    font-size:17px;
+    letter-spacing:0.3px;
+    padding:20px 14px;
+    border-radius:14px;
+    border:1.5px solid transparent;
+    cursor:pointer;
+    color:var(--cream);
+    background:var(--stage-2);
+    transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .choice-btn .icon{
+    font-size:26px;
+  }
+  .choice-btn.personaje{border-color:rgba(216,90,48,0.5);}
+  .choice-btn.personaje:hover{border-color:var(--coral); box-shadow:0 0 0 3px rgba(216,90,48,0.15); transform:translateY(-2px);}
+  .choice-btn.pelicula{border-color:rgba(29,158,117,0.5);}
+  .choice-btn.pelicula:hover{border-color:var(--teal); box-shadow:0 0 0 3px rgba(29,158,117,0.15); transform:translateY(-2px);}
+  .choice-btn:active{transform:translateY(0) scale(0.98);}
+
+  /* Stage / curtain reveal */
+  .stage{
+    position:relative;
+    margin-top:28px;
+    height:230px;
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    background:radial-gradient(ellipse at 50% 30%, rgba(232,184,75,0.14), transparent 65%), #100b0e;
+    border:1px solid rgba(232,184,75,0.25);
+  }
+  .curtain-panel{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:52%;
+    background:
+      repeating-linear-gradient(90deg, var(--curtain) 0 14px, var(--curtain-dark) 14px 28px);
+    box-shadow:inset 0 0 40px rgba(0,0,0,0.5);
+    transition:transform 0.9s cubic-bezier(.65,0,.35,1);
+    z-index:3;
+  }
+  .curtain-left{left:0; border-radius:0 40px 40px 0; transform-origin:left;}
+  .curtain-right{right:0; border-radius:40px 0 0 40px; transform-origin:right;}
+  .stage.open .curtain-left{transform:translateX(-102%);}
+  .stage.open .curtain-right{transform:translateX(102%);}
+
+  .result-area{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    z-index:1;
+  }
+  .placeholder{
+    color:var(--cream-dim);
+    font-size:14px;
+    font-family:'Fraunces', serif;
+    font-style:italic;
+  }
+  .result-card{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .result-card.show{display:flex;}
+  .result-label{
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+  }
+  .result-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(26px, 6vw, 36px);
+    color:var(--cream);
+    max-width:420px;
+    line-height:1.15;
+  }
+  .spotlight{
+    position:absolute;
+    top:-40%;
+    left:50%;
+    width:280px;
+    height:280px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(232,184,75,0.20) 0%, transparent 70%);
+    z-index:0;
+    pointer-events:none;
+  }
+
+  .again-btn{
+    display:none;
+    margin:22px auto 0;
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--stage);
+    background:var(--gold-soft);
+    border:none;
+    padding:12px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .again-btn:hover{background:var(--gold); transform:translateY(-1px);}
+  .again-btn.show{display:block;}
+
+  .footer-note{
+    text-align:center;
+    margin-top:26px;
+    font-size:12px;
+    color:var(--cream-dim);
+    opacity:0.7;
+  }
+
+  /* Captcha falso */
+  #captcha-overlay{
+    position:fixed;
+    inset:0;
+    z-index:999;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(232,184,75,0.10), transparent 60%),
+      var(--stage);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .captcha-box{
+    background:var(--stage-2);
+    border:1.5px solid rgba(232,184,75,0.35);
+    border-radius:18px;
+    padding:34px 30px;
+    max-width:380px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .captcha-check{
+    font-size:12px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  #captcha-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:26px;
+    color:var(--cream);
+    margin:0 0 8px;
+  }
+  .captcha-sub{
+    font-size:13px;
+    color:var(--cream-dim);
+    margin:0 0 24px;
+  }
+  .captcha-buttons{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+  }
+  .captcha-btn{
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:12px 32px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  .captcha-btn:hover{transform:translateY(-2px);}
+  .captcha-btn.si{background:var(--coral); color:var(--cream);}
+  .captcha-btn.no{background:var(--teal); color:var(--cream);}
+
+  .locked-emoji{
+    font-size:44px;
+    margin-bottom:10px;
+    display:block;
+  }
+</style>
+</head>
+<body>
+
+<div id="captcha-overlay">
+  <div class="captcha-box" id="captcha-box">
+    <div class="captcha-check">✅ Verificación de seguridad</div>
+    <h2 id="captcha-title">¿Eres Bosco?</h2>
+    <p class="captcha-sub" id="captcha-sub">Confirma tu identidad para continuar</p>
+    <div class="captcha-buttons" id="captcha-buttons">
+      <button class="captcha-btn si" id="captcha-si">Sí</button>
+      <button class="captcha-btn no" id="captcha-no">No</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="game-wrap" style="display:none;">
+
+  <div class="marquee">
+    <h1>Actuando</h1>
+    <div class="subtitle">Elige una categoría y actúa lo que te toque</div>
+  </div>
+
+  <div class="choices">
+    <button class="choice-btn personaje" id="btn-personaje">
+      <span class="icon">🎭</span>
+      Personaje
+    </button>
+    <button class="choice-btn pelicula" id="btn-pelicula">
+      <span class="icon">🎬</span>
+      Película
+    </button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="spotlight"></div>
+    <div class="curtain-panel curtain-left"></div>
+    <div class="curtain-panel curtain-right"></div>
+    <div class="result-area">
+      <div class="placeholder" id="placeholder">Elige "Personaje" o "Película" para empezar</div>
+      <div class="result-card" id="result-card">
+        <div class="result-label" id="result-label">Personaje</div>
+        <div class="result-name" id="result-name">—</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="again-btn" id="again-btn">Otra vez</button>
+
+  <div class="footer-note">Sin repetir hasta agotar la lista de cada categoría</div>
+
+</div>
+
+<script>
+  const personajes = [
+    "Shrek", "Buzz Lightyear", "Elsa", "Rayo McQueen", "Remy", "Spider-Man",
+    "Batman", "El Guasón", "Iron Man", "Deadpool", "Groot", "Thanos",
+    "Jack Sparrow", "Darth Vader", "Yoda", "Harry Potter", "Voldemort",
+    "Indiana Jones", "Gollum", "Gandalf", "Marty McFly", "Neo", "John Wick",
+    "Terminador", "Rocky Balboa", "Forrest Gump", "La Máscara", "Kevin McCallister",
+    "Barbie", "Willy Wonka", "Beetlejuice", "Freddy Krueger", "Pennywise", "James Bond",
+    "Sherlock Holmes", "Wolverine", "Hulk", "Thor", "Capitán América", "Loki",
+    "Doctor Strange", "Venom", "Mario", "Luigi", "Sonic", "Pikachu", "Goku",
+    "Naruto", "Homero Simpson", "Bob Esponja", "Woody", "Jack Skellington",
+    "Edward Manostijeras", "El Chapulín Colorado", "El Santo", "Chucky",
+    "Michael Myers", "Jason Voorhees", "Hannibal Lecter", "Maléfica", "Shrek Burro",
+    "El Guasón (Joker 2019)", "Tony Montana", "Rambo", "Wonder Woman", "Aquaman",
+    "Flash", "Rey León Simba", "Mufasa", "Po (Kung Fu Panda)", "Genio (Aladdín)",
+    "Jack Torrance", "Freddy Fazbear", "Scooby Doo", "Blancanieves", "Pinocho"
+  ];
+
+  const peliculas = [
+    "Coco", "Intensamente", "El Viaje de Chihiro", "Coraline", "El Resplandor",
+    "El Conjuro", "Un Lugar en Silencio", "El Origen", "Interestelar", "Gladiador",
+    "Mad Max", "Hombres de Negro", "Parque Jurásico", "Avatar", "Los Cazafantasmas",
+    "La Máscara", "Mi Pobre Angelito", "El Grinch", "Titanic", "La Vida es Bella",
+    "Naúfrago", "El Club de la Pelea", "El Show de Truman", "Matrix", "El Padrino",
+    "Pulp Fiction", "Forrest Gump", "Volver al Futuro", "Jurassic World",
+    "Piratas del Caribe", "El Rey León", "Toy Story", "Buscando a Nemo",
+    "Up", "Ratatouille", "Shrek", "Los Increíbles", "Kung Fu Panda",
+    "Cómo Entrenar a tu Dragón", "Sonic la Película", "Super Mario Bros la Película",
+    "It", "Annabelle", "La Monja", "Actividad Paranormal", "Viernes 13",
+    "Halloween", "Psicosis", "Tiburón", "Avatar 2", "Vengadores Endgame",
+    "Spider-Man No Way Home", "Guardianes de la Galaxia", "Deadpool", "Joker",
+    "La La Land", "El Diario de una Pasión", "Que Bello es Vivir", "300",
+    "Gladiador 2", "Oppenheimer", "Barbie", "Wicked", "Frozen", "Encanto"
+  ];
+
+  let restantesPersonajes = [...personajes];
+  let restantesPeliculas = [...peliculas];
+
+  const stage = document.getElementById('stage');
+  const placeholder = document.getElementById('placeholder');
+  const resultCard = document.getElementById('result-card');
+  const resultLabel = document.getElementById('result-label');
+  const resultName = document.getElementById('result-name');
+  const againBtn = document.getElementById('again-btn');
+
+  function elegir(lista, listaOriginal){
+    if(lista.length === 0){
+      lista.push(...listaOriginal);
+    }
+    const idx = Math.floor(Math.random() * lista.length);
+    const elegido = lista[idx];
+    lista.splice(idx, 1);
+    return elegido;
+  }
+
+  function mostrar(tipo){
+    const esPersonaje = tipo === 'personaje';
+    const elegido = esPersonaje
+      ? elegir(restantesPersonajes, personajes)
+      : elegir(restantesPeliculas, peliculas);
+
+    resultLabel.textContent = esPersonaje ? 'Personaje' : 'Película';
+    resultName.textContent = elegido;
+
+    stage.classList.remove('open');
+    placeholder.style.display = 'none';
+    resultCard.classList.remove('show');
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        resultCard.classList.add('show');
+        stage.classList.add('open');
+        againBtn.classList.add('show');
+      }, 120);
+    });
+  }
+
+  // --- Captcha falso "¿Eres Bosco?" ---
+  const captchaBox = document.getElementById('captcha-box');
+  const captchaButtons = document.getElementById('captcha-buttons');
+  const captchaTitle = document.getElementById('captcha-title');
+  const captchaSub = document.getElementById('captcha-sub');
+  const gameWrap = document.getElementById('game-wrap');
+
+  document.getElementById('captcha-si').addEventListener('click', () => {
+    // Bloqueo total: no hay botón, no hay salida, no hay juego.
+    captchaButtons.remove();
+    captchaTitle.innerHTML = '<span class="locked-emoji">🚫</span>Acceso denegado';
+    captchaSub.textContent = 'Lo sentimos Bosco, no puedes jugar. Esta ventana ya no se puede cerrar.';
+
+    // Evita cerrar/recargar sin confirmar
+    window.onbeforeunload = function () {
+      return "No puedes salir de aquí, Bosco.";
+    };
+
+    // Bloquea clic derecho, F5, y atajos comunes de recarga/salida dentro de la página
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'w' || e.key === 'F4'))) {
+        e.preventDefault();
+      }
+    });
+
+    // Reintenta atrapar el foco en esta pestaña
+    setInterval(() => window.focus(), 1000);
+  });
+
+  document.getElementById('captcha-no').addEventListener('click', () => {
+    document.getElementById('captcha-overlay').style.display = 'none';
+    gameWrap.style.display = 'block';
+  });
+
+  document.getElementById('btn-personaje').addEventListener('click', () => mostrar('personaje'));
+  document.getElementById('btn-pelicula').addEventListener('click', () => mostrar('pelicula'));
+  againBtn.addEventListener('click', () => {
+    stage.classList.remove('open');
+    resultCard.classList.remove('show');
+    setTimeout(() => {
+      placeholder.style.display = 'block';
+    }, 400);
+  });
+
+  // Posicionar los focos de luz del marquesina
+  const marquee = document.querySelector('.marquee');
+  const bulbCount = 22;
+  for(let i=0;i<bulbCount;i++){
+    const b = document.createElement('div');
+    b.className = 'bulb';
+    const t = i / bulbCount;
+    const angle = t * Math.PI * 2;
+    const rx = 49, ry = 48;
+    const x = 50 + rx * Math.cos(angle);
+    const y = 50 + ry * Math.sin(angle);
+    b.style.left = x + '%';
+    b.style.top = y + '%';
+    b.style.animationDelay = (i * 0.07) + 's';
+    marquee.appendChild(b);
+  }
+</script>
+
+</body>
+</html>
